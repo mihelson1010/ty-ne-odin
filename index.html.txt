@@ -1,0 +1,338 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ты Не Один!</title>
+  <meta name="description" content="Эмоциональный ИИ-спутник нового типа. Не бот. Тот, кто слушает." />
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+  <meta name="theme-color" content="#FFB86C">
+  <style>
+    :root {
+      --bg: #121218;
+      --card: #1e1e27;
+      --accent: #ffb86c;
+      --text: #f2f2f2;
+      --sub: #a0a0b0;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: Inter, system-ui, sans-serif;
+    }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+    header {
+      padding: 1rem;
+      text-align: center;
+      font-size: 1.1rem;
+      letter-spacing: .5px;
+    }
+    #chat {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: .75rem;
+    }
+    .msg {
+      max-width: 75%;
+      padding: .75rem 1rem;
+      border-radius: 1rem;
+      line-height: 1.4;
+      animation: fade .3s;
+    }
+    @keyframes fade {
+      from { opacity: 0; transform: translateY(8px) }
+    }
+    .user {
+      align-self: flex-end;
+      background: var(--accent);
+      color: var(--bg);
+    }
+    .bot {
+      align-self: flex-start;
+      background: var(--card);
+    }
+    #inputBar {
+      display: flex;
+      padding: .75rem 1rem;
+      gap: .5rem;
+      background: var(--card);
+      border-top: 1px solid #2a2a36;
+    }
+    #inputBar input {
+      flex: 1;
+      padding: .6rem 1rem;
+      border: none;
+      border-radius: 2rem;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 1rem;
+    }
+    #inputBar button {
+      border: none;
+      padding: 0 1.25rem;
+      border-radius: 2rem;
+      background: var(--accent);
+      color: var(--bg);
+      font-weight: 600;
+      cursor: pointer;
+    }
+    #inputBar button:disabled {
+      opacity: .45;
+      cursor: not-allowed;
+    }
+    #settings {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      display: none;
+      flex-direction: column;
+      padding: 1.5rem;
+      gap: 1rem;
+      overflow-y: auto;
+    }
+    #settings.active {
+      display: flex;
+    }
+    #settings h2 {
+      font-weight: 500;
+      margin-bottom: .25rem;
+    }
+    .row {
+      display: flex;
+      flex-direction: column;
+      gap: .25rem;
+    }
+    label {
+      font-size: .85rem;
+      color: var(--sub);
+    }
+    select, input, textarea {
+      padding: .55rem .75rem;
+      border-radius: .5rem;
+      border: 1px solid #2a2a36;
+      background: var(--card);
+      color: var(--text);
+      font-size: .95rem;
+    }
+    textarea {
+      resize: vertical;
+      min-height: 4rem;
+    }
+    .toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .toggle input {
+      width: auto;
+    }
+    #closeSet {
+      margin-top: auto;
+      padding: .75rem;
+      text-align: center;
+      background: var(--accent);
+      color: var(--bg);
+      border-radius: .75rem;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    #setBtn {
+      position: fixed;
+      bottom: 5.5rem;
+      right: 1.25rem;
+      width: 3rem;
+      height: 3rem;
+      border-radius: 50%;
+      background: var(--card);
+      border: 1px solid #2a2a36;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      font-size: 1.4rem;
+    }
+  </style>
+</head>
+<body>
+  <header>Ты Не Один!</header>
+  <main id="chat"></main>
+  <div id="inputBar">
+    <input id="msgInput" type="text" placeholder="Напиши сообщение…" autocomplete="off">
+    <button id="sendBtn">➤</button>
+  </div>
+  <div id="setBtn">⚙</div>
+
+  <!-- ===== НАСТРОЙКИ ===== -->
+  <section id="settings">
+    <h2>Параметры спутника</h2>
+    <div class="row">
+      <label>Ваш возраст</label>
+      <input id="age" type="number" min="10" max="99" value="25">
+    </div>
+    <div class="row">
+      <label>Пол</label>
+      <select id="gender">
+        <option value="не указан">Не указан</option>
+        <option value="мужской">Мужской</option>
+        <option value="женский">Женский</option>
+      </select>
+    </div>
+    <div class="row">
+      <label>Кто будет рядом?</label>
+      <select id="character">
+        <option value="друг">Друг</option>
+        <option value="наставник">Наставник</option>
+        <option value="бабушка">Бабушка</option>
+        <option value="ребёнок">Ребёнок</option>
+        <option value="пожилой">Пожилой человек</option>
+      </select>
+    </div>
+    <div class="row">
+      <label>Язык общения</label>
+      <select id="lang">
+        <option value="ru">Русский</option>
+        <option value="en">English</option>
+        <option value="es">Español</option>
+        <option value="de">Deutsch</option>
+      </select>
+    </div>
+    <div class="row toggle">
+      <label>Голосовые ответы</label>
+      <input id="voice" type="checkbox">
+    </div>
+    <div class="row">
+      <label>Коротко о себе (необязательно)</label>
+      <textarea id="about" placeholder="Что важно знать о тебе…"></textarea>
+    </div>
+    <div id="closeSet">Сохранить и закрыть</div>
+  </section>
+
+  <script>
+    /* ========== КОНФИГУРАЦИЯ ========== */
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxGJk5V1qQYdXJZ7wJvXqXqXqXqXqXqXqXqXqXqXqXqXqXqXqXqXqXqX/exec";
+
+    /* ========== СОСТОЯНИЕ ========== */
+    const state = {
+      userId: localStorage.getItem("uid") || ("u" + Math.random().toString(36).slice(2, 10)),
+      age: localStorage.getItem("age") || "25",
+      gender: localStorage.getItem("gender") || "не указан",
+      character: localStorage.getItem("character") || "друг",
+      lang: localStorage.getItem("lang") || "ru",
+      voice: localStorage.getItem("voice") === "true",
+      about: localStorage.getItem("about") || ""
+    };
+
+    /* ========== UI ========== */
+    const $ = id => document.getElementById(id);
+    const chat = $("chat"), inp = $("msgInput"), send = $("sendBtn");
+    const setWin = $("settings"), setBtn = $("setBtn"), closeSet = $("closeSet");
+
+    function saveState() {
+      Object.entries(state).forEach(([k, v]) => localStorage.setItem(k, v));
+    }
+    function loadState() {
+      $("age").value = state.age;
+      $("gender").value = state.gender;
+      $("character").value = state.character;
+      $("lang").value = state.lang;
+      $("voice").checked = state.voice;
+      $("about").value = state.about;
+    }
+    function appendMsg(txt, who) {
+      const div = document.createElement("div");
+      div.className = "msg " + who;
+      div.textContent = txt;
+      chat.appendChild(div);
+      chat.scrollTop = chat.scrollHeight;
+      if (who === "bot" && state.voice) speak(txt);
+    }
+    function speak(text) {
+      if (!window.speechSynthesis) return;
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = state.lang === "ru" ? "ru-RU" : state.lang;
+      utterance.rate = 0.9;
+      speechSynthesis.speak(utterance);
+    }
+
+    /* ========== НАСТРОЙКИ ========== */
+    setBtn.onclick = () => { setWin.classList.add("active"); };
+    closeSet.onclick = () => {
+      state.age = $("age").value;
+      state.gender = $("gender").value;
+      state.character = $("character").value;
+      state.lang = $("lang").value;
+      state.voice = $("voice").checked;
+      state.about = $("about").value.trim();
+      saveState();
+      setWin.classList.remove("active");
+    };
+
+    /* ========== ОТПРАВКА ========== */
+    async function sendMsg() {
+      const text = inp.value.trim();
+      if (!text) return;
+      inp.value = "";
+      appendMsg(text, "user");
+      send.disabled = true;
+
+      try {
+        const res = await fetch(SCRIPT_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            user_id: state.userId,
+            message: text,
+            age: state.age,
+            gender: state.gender,
+            character_mode: state.character,
+            language: state.lang,
+            about: state.about
+          })
+        });
+
+        if (res.ok) {
+          setTimeout(() => {
+            appendMsg("Я здесь… просто рядом.", "bot");
+            send.disabled = false;
+            inp.focus();
+          }, 3000);
+        } else {
+          appendMsg("Ошибка связи… но я всё равно рядом.", "bot");
+          send.disabled = false;
+        }
+      } catch (e) {
+        appendMsg("Связь прервана… попробуй позже.", "bot");
+        send.disabled = false;
+      }
+    }
+
+    send.onclick = sendMsg;
+    inp.onkeydown = e => { if (e.key === "Enter") sendMsg(); };
+
+    /* ========== ИНИЦИАЛИЗАЦИЯ ========== */
+    loadState();
+    inp.focus();
+  </script>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then(reg => console.log('SW registered:', reg.scope))
+          .catch(err => console.log('SW failed:', err));
+      });
+    }
+  </script>
+</body>
+</html>
